@@ -1,2 +1,5 @@
 # Ambientes virtuais
 **/venv
+
+# Cache
+**/__pycache__

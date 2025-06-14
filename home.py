@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
-
-
+import numpy as np
 import joblib
+
+
+from typing import Any, Sequence
+import math
 
 
 from notebooks.src.config import (
@@ -21,45 +24,81 @@ def loadCleanData():
 @st.cache_data
 def loadGeoData():
 
-    return pd.read_parquet(AGG_COUNTIES_DIR)
+    return gpd.read_parquet(AGG_COUNTIES_DIR)
 
 @st.cache_resource
 def loadModel():
 
     return joblib.load(FINAL_MODEL)
 
+def getCategoryValue(value: float, limits: Sequence[float], labels: Sequence[Any]) -> Any:
+
+    cat_idx = np.digitize(
+        value, 
+        bins=limits, 
+        right=True
+    )
+
+    return labels[cat_idx - 1]
+
+
 df = loadCleanData()
 gdf_geo = loadGeoData()
 model = loadModel()
 
-
 st.title('Previsão de preços de imóveis')
 
-longitude = st.number_input("Longitude", value=-122.33)
-latitude = st.number_input("Latitude", value=37.33)
+counties = list(gdf_geo["name"].sort_values())
 
-housing_median_age = st.number_input("Idade do imóvel", value=10)
+selected_county = st.selectbox("Condado", counties)
 
-total_rooms = st.number_input("Total de cômodos", value=100)
-total_bedrooms = st.number_input("Total de quartos", value=100)
-population = st.number_input("População", value=100)
-households = st.number_input("Domicilios", value=100)
+longitude = gdf_geo.query("name == @selected_county")["longitude"].values[0]
+latitude = gdf_geo.query("name == @selected_county")["latitude"].values[0]
 
-median_income = st.slider(
-    "Renda anual média (múltipos de US$ 10k)", 
-    0.5, 15.0, 
-    value=4.5, 
-    step=0.5
+housing_median_age = st.number_input(
+    "Idade do imóvel", 
+    value=10, 
+    min_value=df["housing_median_age"].min(), 
+    max_value=df["housing_median_age"].max()
     )
 
-ocean_proximity = st.selectbox("Proximidade do oceano", df["ocean_proximity"].unique())
+total_rooms = gdf_geo.query("name == @selected_county")["total_rooms"].values[0]
+total_bedrooms = gdf_geo.query("name == @selected_county")["total_bedrooms"].values[0]
+population = gdf_geo.query("name == @selected_county")["population"].values[0]
+households = gdf_geo.query("name == @selected_county")["households"].values[0]
 
-rooms_per_households = st.number_input("Cômodos por domicilio", value=7)
-population_per_households = st.number_input("População por domicilio", value=0.2)
-bedrooms_per_rooms = st.number_input("Quartos por cômodo", value=2)
+median_income = st.slider(
+    "Renda anual média, em US$", 
+    min_value=5_000.00, 
+    max_value=90_000.00,
+    value=45_000.00, 
+    step=0.01
+    ) / 10_000
 
-median_income_cat = st.number_input("Categoria de renda", value=4)
-housing_median_age_cat = st.number_input("Categoria de idade do imóvel", value=4)
+ocean_proximity = gdf_geo.query("name == @selected_county")["ocean_proximity"].values[0]
+
+rooms_per_households = gdf_geo.query("name == @selected_county")["rooms_per_households"].values[0]
+population_per_households = gdf_geo.query("name == @selected_county")["population_per_households"].values[0]
+bedrooms_per_rooms = gdf_geo.query("name == @selected_county")["bedrooms_per_rooms"].values[0]
+
+median_income_cat_limits = np.append(np.arange(0, 7, 1.5), np.inf)
+median_income_cat_labels = list(range(1, len(median_income_cat_limits)))
+
+median_income_cat = getCategoryValue(
+    median_income,
+    limits=median_income_cat_limits,
+    labels=median_income_cat_labels
+)
+
+
+housing_median_age_cat_limits = [0, 18, 30, 50, np.inf]
+housing_median_age_cat_labels = list(range(1, len(housing_median_age_cat_limits)))
+
+housing_median_age_cat = getCategoryValue(
+    housing_median_age,
+    limits=housing_median_age_cat_limits,
+    labels=housing_median_age_cat_labels
+)
 
 model_input = {
     "longitude": longitude,
@@ -86,4 +125,4 @@ if button_state:
 
     price = model.predict(df_model_input)
 
-    st.write(f"Preço: {price[0]:.2f}")
+    st.write(f"Preço: US$ {price[0]:.2f}")
