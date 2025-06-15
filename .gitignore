@@ -1,5 +1,9 @@
 # Ambientes virtuais
 **/venv
 
+<<<<<<< HEAD
 # Arquivos de cache
+=======
+# Cache
+>>>>>>> streamlit
 **/__pycache__
