@@ -8,7 +8,7 @@ Baseado no projeto de regressão do módulo 14 do curso de ciência de dados da 
 
 Árvore do projeto
 
-.
+```
 ├── data
 │   ├── california-counties.geojson	<- Dados geográficos dos condados da califórnia e suas geometrias
 │   ├── cleaned_housing.parquet		<- Dados originais limpos
@@ -36,3 +36,4 @@ Baseado no projeto de regressão do módulo 14 do curso de ciência de dados da 
 ├── references
 │   └── 01_dicionario_de_dados.md		<- Dicionário de dados da base original
 └── requirements.txt				<- Arquivo de dependências
+```
