@@ -4,7 +4,7 @@ Projeto com interface web dedicada a prever valores de casas na Califórnia
 
 Baseado no projeto de regressão do módulo 14 do curso de ciência de dados da Hashtag Treinamentos
 
-[Link do projeto na cloud do streamlit](https://www.reddit.com/r/linuxquestions/comments/dbiban/exclude_directory_from_tree_command/)
+[Link do projeto na cloud do streamlit](https://californiapriceestimation.streamlit.app/)
 
 Árvore do projeto
 
